@@ -11,11 +11,12 @@ Basic bluetooth scanner
 
 class SimpleBluetooth:
 
-    def __init__(self, file_data):
-        self.file = file_data
+    def __init__(self):
+        pass
 
-    def basic_scan(self):
-        cfg = _Config(service_file="", services="")
+    @staticmethod
+    def basic_scan():
+        cfg = _Config()
 
         # How many devices were found?...
         print("\033[34m[*]\033[37m Managed to find {} devices...\033[0m".format(cfg.device_number()))
@@ -27,19 +28,8 @@ class SimpleBluetooth:
                 "\t\033[37m-- Device Class:\t\t\033[32m{}\033[0m\n\n".format(name, addr, dc)
             )
 
-            if str(self.file) is not None:
-                print("\033[32m[+]\033[37m Writing data to file: {}\033[0m".format(self.file))
-                d = open(self.file, "a+")
-                d.write(
-                    "++ Device Name:\t\t\t{}\n"
-                    "++ Device Address:\t\t{}\n"
-                    "++ Device Class:\t\t{}\n\n".format(name, addr, dc)
-                )
-                d.close()
-                print("\033[32m[+]\033[37m Written data to file...\033[0m\n")
-
-
-    def add_service_scan(self):
+    @staticmethod
+    def add_service_scan():
         print("\033[34m[*]\033[37m Managed to find {} devices...\033[0m".format(_Config.basic_device_setup_list()))
 
         for addr, name in _Config.basic_device_setup():
@@ -58,9 +48,7 @@ class SimpleBluetooth:
 
 class _Config:
 
-    def __init__(self, service_file, services):
-        self.srvf = service_file
-        self.srvs = services
+    def __init__(self):
         self.devices = bluetooth.discover_devices(lookup_names=True, lookup_class=True)
         self.devno = len(self.devices)
 
@@ -72,13 +60,13 @@ class _Config:
 
     @staticmethod
     def basic_device_setup():
-        device = bluetooth.discover_devices(lookup_names=True)
+        device = bluetooth.discover_devices(duration=5, lookup_names=True)
 
         return device
 
     @staticmethod
     def basic_device_setup_list():
-        device = bluetooth.discover_devices(lookup_names=True)
+        device = bluetooth.discover_devices(duration=5, lookup_names=True)
         devno = len(device)
 
         return devno
@@ -101,11 +89,8 @@ def main():
     ops.add_argument('-v', '--version', action="store_true", dest="get_version", help="Print module version and exit")
     ops.add_argument('-b', '--basic', action="store_true", dest="init_basic_scan", help="Initialize a basic bluetooth scan")
     ops.add_argument('-s', '--service-scan', action="store_true", dest="add_service_scan", help="Add service scanning to bluetooth scan")
-    ops.add_argument('-w', '--write', type=str, dest="write_to_file", metavar="", help="Write formatted data to file")
-    ops.add_argument('--wsd', action="store_true", dest="write_srv_data", help="Write service entries to .srv file")
 
     args = ops.parse_args()
-    blues = SimpleBluetooth(file_data=args.write_to_file)
 
     if args.get_version:
         print("\n\033[37m++ Module Version: {}\033[0m\n".format(_Config.get_version()))
@@ -113,15 +98,13 @@ def main():
     if args.init_basic_scan:
         print("\033[32m[+]\033[37m Running basic bluetooth scanner...\033[0m")
 
-        t = threading.Thread(target=blues.basic_scan(), args=(1,))
+        t = threading.Thread(target=SimpleBluetooth.basic_scan(), args=(1,))
         t.start()
 
     if args.add_service_scan:
         print("\033[32m[+]\033[37m Running service scanner...\033[0m")
 
-        t = threading.Thread(target=blues.add_service_scan(), args=(1,))
+        t = threading.Thread(target=SimpleBluetooth.add_service_scan(), args=(1,))
         t.start()
-
-
 
 main()
